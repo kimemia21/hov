@@ -164,8 +164,8 @@ class _AppHomepageState extends State<AppHomepage> {
     return Scaffold(
         backgroundColor: Colors.black,
         body: Container(
-          height:MediaQuery.of(context).size.height,
-          width:MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
           padding: EdgeInsets.all(2),
           child: isLoading
               ? Center(
@@ -173,20 +173,18 @@ class _AppHomepageState extends State<AppHomepage> {
                       color: Colors.green, size: 40),
                 )
               : RefreshIndicator(
-                onRefresh: () async {
-             
-                  await getProfile();
-                  await getRecentPlayed();
-                  await getRecentPlayLists();
-                  await getTopArtists();
-                
-                },
-                child: SingleChildScrollView(
-                  physics: BouncingScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    child: Stack(
+                  onRefresh: () async {
+                    await getProfile();
+                    await getRecentPlayed();
+                    await getRecentPlayLists();
+                    await getTopArtists();
+                  },
+                  child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 12,
+                      width: MediaQuery.of(context).size.width,
+                      child: Stack(
                         children: [
                           Positioned(
                             top: 50,
@@ -203,17 +201,20 @@ class _AppHomepageState extends State<AppHomepage> {
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 10),
                                 SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.4,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.4,
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.05),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.notifications,
@@ -225,7 +226,8 @@ class _AppHomepageState extends State<AppHomepage> {
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.05),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.history,
@@ -237,7 +239,8 @@ class _AppHomepageState extends State<AppHomepage> {
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.05),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           Icons.settings,
@@ -288,8 +291,8 @@ class _AppHomepageState extends State<AppHomepage> {
                                       } else if (snapshot.hasError) {
                                         return const Center(
                                           child: Text("Error loading playlists",
-                                              style:
-                                                  TextStyle(color: Colors.white)),
+                                              style: TextStyle(
+                                                  color: Colors.white)),
                                         );
                                       } else {
                                         return const Center(
@@ -325,8 +328,8 @@ class _AppHomepageState extends State<AppHomepage> {
                                         return const Center(
                                           child: Text(
                                               "Error loading Recent Plays",
-                                              style:
-                                                  TextStyle(color: Colors.white)),
+                                              style: TextStyle(
+                                                  color: Colors.white)),
                                         );
                                       } else {
                                         return const Center(
@@ -336,7 +339,7 @@ class _AppHomepageState extends State<AppHomepage> {
                                     },
                                   ),
                                   SizedBox(
-                                    height: 20,
+                                    height: 10,
                                   ),
                                   Text(
                                     "Your Top 10 Artists",
@@ -346,16 +349,47 @@ class _AppHomepageState extends State<AppHomepage> {
                                         fontWeight: FontWeight.bold),
                                   ),
                                   SizedBox(
-                                    height: 20,
+                                    height: 10,
                                   ),
-                                  TopArtistTile (),
+                                  FutureBuilder<List<TopArtists>>(
+                                    future: topArtists,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        final data = snapshot.data;
+                                        return SizedBox(
+                                          height: 250,
+                                          width: MediaQuery.of(context).size.width,
+                                          child: ListView.builder(
+                                              itemCount: data!.length,
+                                              scrollDirection: Axis.horizontal,
+                                              itemBuilder: (context, index) {
+                                                return TopArtistTile(topArtists:data[index],);
+                                              }),
+                                        );
+
+                                      
+                                      } else if (snapshot.hasError) {
+                                        return const Center(
+                                          child: Text(
+                                              "Error top Plays",
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        );
+                                      } else {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    },
+                                  ),
+                              
                                 ],
                               ))
                         ],
                       ),
+                    ),
                   ),
                 ),
-              ),
         ));
   }
 }
@@ -494,7 +528,7 @@ class SpotifyReleaseCard extends StatelessWidget {
           Container(
             height: 120,
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 8, 8, 8),
+              color: Colors.black,
               borderRadius: BorderRadius.circular(4.0),
             ),
             child: Row(
@@ -566,7 +600,8 @@ class SpotifyReleaseCard extends StatelessWidget {
 }
 
 class TopArtistTile extends StatefulWidget {
-  const TopArtistTile({super.key});
+  final TopArtists topArtists;
+  const TopArtistTile({required this.topArtists});
 
   @override
   State<TopArtistTile> createState() => _TopArtistTileState();
@@ -576,62 +611,47 @@ class _TopArtistTileState extends State<TopArtistTile> {
   @override
   Widget build(BuildContext context) {
     return Container(
-
-      width: 150,
-     
+      width: 180,
       decoration: BoxDecoration(
         color: Colors.black,
-        boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.5),
-          spreadRadius: 1,
-          blurRadius: 1,
-          offset: Offset(0, 1),
-        ),
-   
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.5),
-          spreadRadius: 1,
-          blurRadius: 1,
-          offset: Offset(0, -1),
-        ),
-      ], borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        // crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(10),
-              topRight: Radius.circular(10),
-            ),
-            child: Image.network(
-              "https://i.pinimg.com/550x/f9/33/ae/f933ae244533f20727d0daba173128b8.jpg",
-              width: 150,
+
+        // borderRadius: BorderRadius.circular(10)
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          // crossAxisAlignment: CrossAxisAlignment.start,
+
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              widget.topArtists.images[0].url!,
               height: 120,
+              width: 180,
               fit: BoxFit.cover,
             ),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Text(
-            "Artist Name",
-            style: GoogleFonts.albertSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+            const SizedBox(
+              height: 5,
             ),
-          ),
+             Text(
+              widget.topArtists.name,
+              style: GoogleFonts.albertSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
             Text(
-            "Genre.Rap",
-            style: GoogleFonts.albertSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              widget.topArtists.type,
+              style: GoogleFonts.albertSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w300,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+           
+          ],
+        ),
       ),
     );
   }
