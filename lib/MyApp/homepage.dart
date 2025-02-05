@@ -126,7 +126,6 @@ class _AppHomepageState extends State<AppHomepage> {
     }
   }
 
-
   Future<List<TopArtists>> getTopArtists() async {
     setState(() {
       isLoading = true;
@@ -165,187 +164,198 @@ class _AppHomepageState extends State<AppHomepage> {
     return Scaffold(
         backgroundColor: Colors.black,
         body: Container(
+          height:MediaQuery.of(context).size.height,
+          width:MediaQuery.of(context).size.width,
           padding: EdgeInsets.all(2),
           child: isLoading
               ? Center(
                   child: LoadingAnimationWidget.staggeredDotsWave(
                       color: Colors.green, size: 40),
                 )
-              : Stack(
-                  children: [
-                    Positioned(
-                      top: 50,
-                      left: 10,
-                      right: 10,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              : RefreshIndicator(
+                onRefresh: () async {
+             
+                  await getProfile();
+                  await getRecentPlayed();
+                  await getRecentPlayLists();
+                  await getTopArtists();
+                
+                },
+                child: SingleChildScrollView(
+                  physics: BouncingScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    child: Stack(
                         children: [
-                          Text(
-                            getGreeting(),
-                            style: GoogleFonts.albertSans(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.4,
+                          Positioned(
+                            top: 50,
+                            left: 10,
+                            right: 10,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.notifications,
-                                    // size: 28,
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.history,
-                                    // size: 28,
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.settings,
-                                    // size: 28,
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                        top: 80,
-                        left: 10,
-                        right: 10,
-                        child: RefreshIndicator(
-                          onRefresh: () async {
-                            await getProfile();
-                            await getRecentPlayed();
-                            await getRecentPlayLists();
-                          },
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FutureBuilder<List<SpotifyPlaylist>>(
-                                  future: playLists,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      final data = snapshot.data;
-                                      return GridView.builder(
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          childAspectRatio:
-                                              2.1, // This controls the height of the tiles
-                                          crossAxisSpacing: 1,
-                                          mainAxisSpacing: 1,
-                                        ),
-                                        shrinkWrap:
-                                            true, // Add this to prevent expanding issues
-                                        itemCount: data!.length,
-                                        itemBuilder: (context, index) {
-                                          final item = data[index];
-                                          return HomepagePlayListTile(
-                                            playlistName: item.name,
-                                            imageUrl: item.images[0].url!,
-                                          );
-                                        },
-                                      );
-                                    } else if (snapshot.hasError) {
-                                      return const Center(
-                                        child: Text("Error loading playlists",
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      );
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  },
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
                                 Text(
-                                  "Recently Played",
+                                  getGreeting(),
                                   style: GoogleFonts.albertSans(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
                                 ),
+                                const SizedBox(width: 16),
                                 SizedBox(
-                                  height: 25,
-                                ),
-                                FutureBuilder<List<RecentlyPlayedItem>>(
-                                  future: recentPlays,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      final data = snapshot.data;
-                                      return SpotifyReleaseCard(
-                                          RPI: data![0],
-                                          onPlay: () {},
-                                          onLike: () {});
-                                    } else if (snapshot.hasError) {
-                                      return const Center(
-                                        child: Text(
-                                            "Error loading Recent Plays",
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      );
-                                    } else {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                  },
-                                ),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                                Text(
-                                  "Your Top 10 Artists",
-                                  style: GoogleFonts.albertSans(
-                                      fontSize: 20,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                  SizedBox(
-                                  height: 20,
+                                  width: MediaQuery.of(context).size.width * 0.4,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.05),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.notifications,
+                                          // size: 28,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.05),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.history,
+                                          // size: 28,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.05),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          Icons.settings,
+                                          // size: 28,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ))
-                  ],
+                          Positioned(
+                              top: 80,
+                              left: 10,
+                              right: 10,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FutureBuilder<List<SpotifyPlaylist>>(
+                                    future: playLists,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        final data = snapshot.data;
+                                        return GridView.builder(
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            childAspectRatio:
+                                                2.1, // This controls the height of the tiles
+                                            crossAxisSpacing: 1,
+                                            mainAxisSpacing: 1,
+                                          ),
+                                          shrinkWrap:
+                                              true, // Add this to prevent expanding issues
+                                          itemCount: data!.length,
+                                          itemBuilder: (context, index) {
+                                            final item = data[index];
+                                            return HomepagePlayListTile(
+                                              playlistName: item.name,
+                                              imageUrl: item.images[0].url!,
+                                            );
+                                          },
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return const Center(
+                                          child: Text("Error loading playlists",
+                                              style:
+                                                  TextStyle(color: Colors.white)),
+                                        );
+                                      } else {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Text(
+                                    "Recently Played",
+                                    style: GoogleFonts.albertSans(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 25,
+                                  ),
+                                  FutureBuilder<List<RecentlyPlayedItem>>(
+                                    future: recentPlays,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        final data = snapshot.data;
+                                        return SpotifyReleaseCard(
+                                            RPI: data![0],
+                                            onPlay: () {},
+                                            onLike: () {});
+                                      } else if (snapshot.hasError) {
+                                        return const Center(
+                                          child: Text(
+                                              "Error loading Recent Plays",
+                                              style:
+                                                  TextStyle(color: Colors.white)),
+                                        );
+                                      } else {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                  Text(
+                                    "Your Top 10 Artists",
+                                    style: GoogleFonts.albertSans(
+                                        fontSize: 20,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 20,
+                                  ),
+                                  TopArtistTile (),
+                                ],
+                              ))
+                        ],
+                      ),
+                  ),
                 ),
+              ),
         ));
   }
 }
@@ -547,6 +557,78 @@ class SpotifyReleaseCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TopArtistTile extends StatefulWidget {
+  const TopArtistTile({super.key});
+
+  @override
+  State<TopArtistTile> createState() => _TopArtistTileState();
+}
+
+class _TopArtistTileState extends State<TopArtistTile> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+
+      width: 150,
+     
+      decoration: BoxDecoration(
+        color: Colors.black,
+        boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.5),
+          spreadRadius: 1,
+          blurRadius: 1,
+          offset: Offset(0, 1),
+        ),
+   
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.5),
+          spreadRadius: 1,
+          blurRadius: 1,
+          offset: Offset(0, -1),
+        ),
+      ], borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        // crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(10),
+              topRight: Radius.circular(10),
+            ),
+            child: Image.network(
+              "https://i.pinimg.com/550x/f9/33/ae/f933ae244533f20727d0daba173128b8.jpg",
+              width: 150,
+              height: 120,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Text(
+            "Artist Name",
+            style: GoogleFonts.albertSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+            Text(
+            "Genre.Rap",
+            style: GoogleFonts.albertSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
         ],
