@@ -120,7 +120,7 @@ class _AppHomepageState extends State<AppHomepage> {
       child: Scaffold(
           backgroundColor: Colors.black,
           body: Container(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(2),
             child: isLoading
                 ? Center(
                     child: LoadingAnimationWidget.staggeredDotsWave(
@@ -134,7 +134,7 @@ class _AppHomepageState extends State<AppHomepage> {
                       child: Stack(
                         children: [
                           Positioned(
-                            top: 60,
+                            top: 50,
                             left: 10,
                             right: 10,
                             child: Row(
@@ -143,7 +143,7 @@ class _AppHomepageState extends State<AppHomepage> {
                                 Text(
                                   getGreeting(),
                                   style: GoogleFonts.albertSans(
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -202,38 +202,51 @@ class _AppHomepageState extends State<AppHomepage> {
                             ),
                           ),
                           Positioned(
-                              top: 170,
+                              top: 80,
                               left: 10,
                               right: 10,
-                              child: FutureBuilder<List<SpotifyPlaylist>>(
-                                  future: playLists,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      final data = snapshot.data;
-                                      return SizedBox(
-                                       height: MediaQuery.of(context).size.height*0.4,
-                                        child: GridView.builder(
-                                          gridDelegate:
-                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 2),
-                                          scrollDirection: Axis.vertical,
-                                          itemCount: data!.length,
-                                          itemBuilder: (context, index) {
-                                            final item = data[index];
-                                            return Container(
-                                                margin: const EdgeInsets.only(
-                                                    right: 10),
-                                                child: Image.network(
-                                                    item.images[0].url!));
-                                          },
-                                        ),
-                                      );
-                                    } else {
-                                      return Center(
-                                        child: Text("No Data"),
-                                      );
-                                    }
-                                  }))
+                              child:
+// Modified FutureBuilder implementation
+                                  FutureBuilder<List<SpotifyPlaylist>>(
+                                future: playLists,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    final data = snapshot.data;
+                                    return GridView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        childAspectRatio:
+                                            2.1, // This controls the height of the tiles
+                                        crossAxisSpacing: 1,
+                                        mainAxisSpacing: 1,
+                                      ),
+                                      shrinkWrap:
+                                          true, // Add this to prevent expanding issues
+                                      itemCount: data!.length,
+                                      itemBuilder: (context, index) {
+                                        final item = data[index];
+                                        return HomepagePlayListTile(
+                                          playlistName: item.name,
+                                          imageUrl: item.images[0].url!,
+                                        );
+                                      },
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return const Center(
+                                      child: Text("Error loading playlists",
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    );
+                                  } else {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                },
+                              ))
                         ],
                       ),
                     ),
@@ -243,200 +256,65 @@ class _AppHomepageState extends State<AppHomepage> {
   }
 }
 
-class ArtistRecentPlayCard extends StatelessWidget {
-  final String artistName;
-  final String artistImageUrl;
-  final String genre;
+class HomepagePlayListTile extends StatefulWidget {
+  final String imageUrl;
+  final String playlistName;
 
-  const ArtistRecentPlayCard({
-    Key? key,
-    required this.artistName,
-    required this.artistImageUrl,
-    required this.genre,
-  }) : super(key: key);
+  const HomepagePlayListTile({
+    super.key,
+    required this.imageUrl,
+    required this.playlistName,
+  });
 
+  @override
+  State<HomepagePlayListTile> createState() => _HomepagePlayListTileState();
+}
+
+class _HomepagePlayListTileState extends State<HomepagePlayListTile> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      margin: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.black.withOpacity(0.2),
-          width: 1,
-        ),
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          color: Colors.black,
-          padding: const EdgeInsets.all(15),
-          child: Row(
-            children: [
-              Hero(
-                tag: artistName,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.1),
-                        blurRadius: 15,
-                        spreadRadius: 2,
-                      )
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.network(
-                      artistImageUrl,
-                      width: 120,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 80,
-                          height: 80,
-                          color: Colors.grey.shade900,
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white24,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Artist Details
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        artistName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        genre,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // View Profile Button
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withOpacity(0.2),
-                      Colors.white.withOpacity(0.1)
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.white.withOpacity(0.8),
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    // Navigate to artist profile
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ArtistProfilePage(artistName: artistName),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ArtistProfilePage extends StatelessWidget {
-  final String artistName;
-
-  const ArtistProfilePage({Key? key, required this.artistName})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(artistName),
-      ),
-      body: Center(
-        child: Text(
-          'Artist Profile for $artistName',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-class RecentPlaysPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: ListView(
+      child: Row(
         children: [
-          ArtistRecentPlayCard(
-            artistName: "The Weeknd",
-            artistImageUrl: "https://example.com/artist-image.jpg",
-            genre: "Pop R&B",
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(8),
+              bottomLeft: Radius.circular(8),
+            ),
+            child: Image.network(
+              widget.imageUrl,
+              width: 50,
+              height: 70,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 65,
+                  height: 65,
+                  color: Colors.grey.shade800,
+                  child: const Icon(Icons.music_note, color: Colors.white),
+                );
+              },
+            ),
           ),
-          ArtistRecentPlayCard(
-            artistName: "Billie Eilish",
-            artistImageUrl: "https://example.com/billie-image.jpg",
-            genre: "Alternative Pop",
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                widget.playlistName,
+                style: GoogleFonts.albertSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
           ),
         ],
       ),
