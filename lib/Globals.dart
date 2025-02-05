@@ -93,3 +93,29 @@ class SlideUpRoute extends PageRouteBuilder {
           reverseTransitionDuration: Duration(milliseconds: 500),
         );
 }
+
+
+String getGreeting() {
+  final hour = DateTime.now().hour;
+
+  // Early morning (12 AM - 5 AM)
+  if (hour >= 0 && hour < 5) {
+    return "Hi there";
+  }
+  // Morning (5 AM - 12 PM)
+  else if (hour >= 5 && hour < 12) {
+    return "Good morning";
+  }
+  // Afternoon (12 PM - 5 PM)
+  else if (hour >= 12 && hour < 17) {
+    return "Good afternoon";
+  }
+  // Evening (5 PM - 9 PM)
+  else if (hour >= 17 && hour < 21) {
+    return "Good evening";
+  }
+  // Night (9 PM - 12 AM)
+  else {
+    return "How was your day";
+  }
+}

@@ -1,9 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:spotifyplayer/Globals.dart';
+import 'package:spotifyplayer/MyApp/UserProfile.dart';
 import 'package:spotifyplayer/comms.dart';
+import 'package:spotifyplayer/creditials.dart';
 
-class LoginPage extends StatelessWidget {
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:spotifyplayer/MyApp/homepage.dart';
+
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool isLoading = false;
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,34 +83,41 @@ class LoginPage extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () async {
                         try {
+                          setState(() {
+                            isLoading = true;
+                          });
+
                           showDialog(
                             context: context,
                             barrierDismissible: false,
                             builder: (context) => Center(
-                              child: CircularProgressIndicator(),
+                              child: Center(
+                                child: LoadingAnimationWidget.staggeredDotsWave(
+                                  color: Colors.green,
+                                  size: 50,
+                                ),
+                              ),
                             ),
                           );
 
-                          final result =
-                              await SpotifyRequests.loginWithSpotify();
-
-                          // Make sure to pop the loading dialog
-                          Navigator.of(context).pop();
-
-                          print("Login result: $result");
-
-                          if (!result['success']) {
-                            // Show error to user
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:
-                                      Text(result['error'] ?? 'Login failed')),
-                            );
-                          } else {
-                            // Handle successful login
-                            print(
-                                "Successfully logged in with code: ${result['code']}");
-                          }
+                          await spotifyRequests.loginWithSpotify()
+                              .then((value) {
+                            if (value["success"]) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                  context,SlideUpRoute(page: AppHomepage())
+                                 );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content:
+                                        Text(value['error'] ?? 'Login failed')),
+                              );
+                            }
+                          });
                         } catch (e) {
                           Navigator.of(context)
                               .pop(); // Make sure to pop the loading dialog
@@ -108,15 +137,30 @@ class LoginPage extends StatelessWidget {
                         elevation: 8,
                         shadowColor: Colors.green.withOpacity(0.5),
                       ),
-                      child: Text(
-                        "LOGIN",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                        ),
+                      child: isLoading? LoadingAnimationWidget.staggeredDotsWave(
+                                  color: Colors.white,
+                                  size: 20,
+                                ):Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.music_note,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Login with Spotify",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
+                      
+                      
                     ),
                     const SizedBox(height: 16),
                     TextButton(

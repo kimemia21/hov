@@ -5,20 +5,35 @@ import 'package:flutter/services.dart';
 import 'package:spotifyplayer/creditials.dart';
 import 'package:flutter_web_auth/flutter_web_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+
+Dio dio = Dio(
+  BaseOptions(
+    connectTimeout: Duration(seconds: 5),
+    headers: {
+      'Authorization': 'Bearer $accessCode',
+      'Content-Type': 'application/json',
+    },
+  ),
+);
 
 class SpotifyRequests {
   static final authUrl = 'https://accounts.spotify.com/authorize'
       '?client_id=$clientId'
       '&response_type=code'
       '&redirect_uri=$redirectUri'
-      '&scope=user-read-private user-read-email playlist-read-private'
-      '&show_dialog=true';
+      '&scope=${Uri.encodeComponent(_scopes)}'
+      '&show_dialog=false';
 
-// static Future<void> clearCookies() async {
-//   final cookieManager = WebviewCookieManager();
-//   await cookieManager.clearCookies();
-// }
-  static Future<Map<String, dynamic>> loginWithSpotify() async {
+  static const _scopes = '''
+ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing 
+app-remote-control streaming playlist-read-private playlist-read-collaborative playlist-modify-private 
+playlist-modify-public user-follow-modify user-follow-read user-read-playback-position 
+user-top-read user-read-recently-played user-library-modify user-library-read 
+user-read-email user-read-private
+''';
+
+  Future<Map<String, dynamic>> loginWithSpotify() async {
     try {
       print('DEBUG: Starting Spotify authentication flow');
       print('DEBUG: Using callback scheme: myapp');
@@ -55,18 +70,16 @@ class SpotifyRequests {
         };
       }
 
-      final code = resultUri.queryParameters['code'];
-    
-      if (code != null) {
-          accessCode = code;
+      final loginCode = resultUri.queryParameters['code'];
+
+      if (loginCode != null) {
         try {
-          final tokenResponse = await getAccessToken(accessCode);
+          final tokenResponse = await getAccessToken(loginCode);
 
           print('DEBUG: Successfully retrieved access token');
           return {
             'success': true,
-            'code': code,
-            'tokenResponse': "tokenResponse",
+            'loginCode': loginCode,
           };
         } catch (e) {
           print('DEBUG: Token exchange failed: $e');
@@ -94,8 +107,7 @@ class SpotifyRequests {
     }
   }
 
-  static Future<void> getAccessToken(String code) async {
-    print(code);
+  Future<void> getAccessToken(String logincode) async {
     final response = await http.post(
       Uri.parse("https://accounts.spotify.com/api/token"),
       headers: {
@@ -105,12 +117,39 @@ class SpotifyRequests {
       },
       body: {
         "grant_type": "authorization_code",
-        "code": code,
+        "code": logincode,
         "redirect_uri": redirectUri
       },
     );
 
     final data = json.decode(response.body);
-    print("Access Token: ${data['access_token']}");
+    final access_Code = data['access_token'];
+    if (response.statusCode == 200 && access_Code != null) {
+      accessCode = data['access_token'];
+
+      // print("###################3success");
+      print("### acess code is $access_Code");
+    }
+  }
+
+  Future<Map<String, dynamic>> getRequests({required String enpoint}) async {
+    try {
+      print(accessCode);
+      if (accessCode != null) {
+        print("hiting $baseUrl/$enpoint");
+        final response = await dio.get("$baseUrl/$enpoint");
+        if (response.statusCode == 200) {
+          return {"success": true, "rsp": response.data};
+        } else {
+          var errorData = json.decode(response.data);
+
+          return {"success": false, "rsp": "$errorData"};
+        }
+      } else {
+        throw Exception('acessCode is missing');
+      }
+    } on DioException catch (e) {
+      throw Exception('error on this enpoint $enpoint ,error is $e');
+    }
   }
 }
