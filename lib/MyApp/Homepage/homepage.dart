@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:spotifyplayer/Globals.dart';
+import 'package:spotifyplayer/MyApp/PlayLists/Playlist.dart';
 import 'package:spotifyplayer/creditials.dart';
 import 'package:spotifyplayer/models/RecentPlayed.dart';
 import 'package:spotifyplayer/models/SpotifyPlaylists.dart';
@@ -283,8 +284,7 @@ class _AppHomepageState extends State<AppHomepage> {
                                           itemBuilder: (context, index) {
                                             final item = data[index];
                                             return HomepagePlayListTile(
-                                              playlistName: item.name,
-                                              imageUrl: item.images[0].url!,
+                                              playlist: item,
                                             );
                                           },
                                         );
@@ -358,20 +358,20 @@ class _AppHomepageState extends State<AppHomepage> {
                                         final data = snapshot.data;
                                         return SizedBox(
                                           height: 250,
-                                          width: MediaQuery.of(context).size.width,
+                                          width:
+                                              MediaQuery.of(context).size.width,
                                           child: ListView.builder(
                                               itemCount: data!.length,
                                               scrollDirection: Axis.horizontal,
                                               itemBuilder: (context, index) {
-                                                return TopArtistTile(topArtists:data[index],);
+                                                return TopArtistTile(
+                                                  topArtists: data[index],
+                                                );
                                               }),
                                         );
-
-                                      
                                       } else if (snapshot.hasError) {
                                         return const Center(
-                                          child: Text(
-                                              "Error top Plays",
+                                          child: Text("Error top Plays",
                                               style: TextStyle(
                                                   color: Colors.white)),
                                         );
@@ -382,7 +382,6 @@ class _AppHomepageState extends State<AppHomepage> {
                                       }
                                     },
                                   ),
-                              
                                 ],
                               ))
                         ],
@@ -395,14 +394,9 @@ class _AppHomepageState extends State<AppHomepage> {
 }
 
 class HomepagePlayListTile extends StatefulWidget {
-  final String imageUrl;
-  final String playlistName;
+  final SpotifyPlaylist playlist;
 
-  const HomepagePlayListTile({
-    super.key,
-    required this.imageUrl,
-    required this.playlistName,
-  });
+  const HomepagePlayListTile({required this.playlist});
 
   @override
   State<HomepagePlayListTile> createState() => _HomepagePlayListTileState();
@@ -411,50 +405,57 @@ class HomepagePlayListTile extends StatefulWidget {
 class _HomepagePlayListTileState extends State<HomepagePlayListTile> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(8),
-              bottomLeft: Radius.circular(8),
-            ),
-            child: Image.network(
-              widget.imageUrl,
-              width: 50,
-              height: 70,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 65,
-                  height: 65,
-                  color: Colors.grey.shade800,
-                  child: const Icon(Icons.music_note, color: Colors.white),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                widget.playlistName,
-                style: GoogleFonts.albertSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+    return GestureDetector(
+      onTap: () {
+      
+        Navigator.push(context,
+            SlideUpRoute(page: Playlist(playlistId: widget.playlist.id)));
+      },
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+              ),
+              child: Image.network(
+                widget.playlist.images[0].url!,
+                width: 50,
+                height: 70,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 65,
+                    height: 65,
+                    color: Colors.grey.shade800,
+                    child: const Icon(Icons.music_note, color: Colors.white),
+                  );
+                },
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  widget.playlist.name,
+                  style: GoogleFonts.albertSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -610,6 +611,7 @@ class TopArtistTile extends StatefulWidget {
 class _TopArtistTileState extends State<TopArtistTile> {
   @override
   Widget build(BuildContext context) {
+    print(widget.topArtists.genres);
     return Container(
       width: 180,
       decoration: BoxDecoration(
@@ -633,7 +635,7 @@ class _TopArtistTileState extends State<TopArtistTile> {
             const SizedBox(
               height: 5,
             ),
-             Text(
+            Text(
               widget.topArtists.name,
               style: GoogleFonts.albertSans(
                 fontSize: 14,
@@ -649,7 +651,6 @@ class _TopArtistTileState extends State<TopArtistTile> {
                 color: Colors.white,
               ),
             ),
-           
           ],
         ),
       ),

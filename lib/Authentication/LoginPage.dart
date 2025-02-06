@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotifyplayer/Globals.dart';
-import 'package:spotifyplayer/MyApp/UserProfile.dart';
+import 'package:spotifyplayer/MyApp/Homepage/UserProfile.dart';
 import 'package:spotifyplayer/comms.dart';
 import 'package:spotifyplayer/creditials.dart';
 
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:spotifyplayer/MyApp/homepage.dart';
+import 'package:spotifyplayer/MyApp/Homepage/homepage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
