@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:spotifyplayer/Globals.dart';
+import 'package:spotifyplayer/MyApp/Music/CurrentPlay.dart';
+import 'package:spotifyplayer/MyApp/Music/MusicPlayer.dart';
 import 'package:spotifyplayer/MyApp/PlayLists/Playlist.dart';
 import 'package:spotifyplayer/creditials.dart';
 import 'package:spotifyplayer/models/RecentPlayed.dart';
@@ -180,79 +182,82 @@ class _AppHomepageState extends State<AppHomepage> {
                     await getRecentPlayLists();
                     await getTopArtists();
                   },
-                  child: SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
+                  child: Container(
                     child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 12,
-                      width: MediaQuery.of(context).size.width,
+                      // error with the scrolling some kids are not being displayed correctly 
+                      // height: MediaQuery.of(context).size.height * 1,
+                      // width: MediaQuery.of(context).size.width,
                       child: Stack(
                         children: [
                           Positioned(
                             top: 50,
                             left: 10,
                             right: 10,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  getGreeting(),
-                                  style: GoogleFonts.albertSans(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                            child: SingleChildScrollView(
+                              physics: BouncingScrollPhysics(),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    getGreeting(),
+                                    style: GoogleFonts.albertSans(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.4,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.05),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                  const SizedBox(width: 10),
+                                  SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.4,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.05),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.notifications,
+                                            // size: 28,
+                                            color: Colors.white.withOpacity(0.7),
+                                          ),
                                         ),
-                                        child: Icon(
-                                          Icons.notifications,
-                                          // size: 28,
-                                          color: Colors.white.withOpacity(0.7),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.05),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.history,
+                                            // size: 28,
+                                            color: Colors.white.withOpacity(0.7),
+                                          ),
                                         ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.05),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.05),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.settings,
+                                            // size: 28,
+                                            color: Colors.white.withOpacity(0.7),
+                                          ),
                                         ),
-                                        child: Icon(
-                                          Icons.history,
-                                          // size: 28,
-                                          color: Colors.white.withOpacity(0.7),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.05),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          Icons.settings,
-                                          // size: 28,
-                                          color: Colors.white.withOpacity(0.7),
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                           Positioned(
@@ -325,6 +330,7 @@ class _AppHomepageState extends State<AppHomepage> {
                                             onPlay: () {},
                                             onLike: () {});
                                       } else if (snapshot.hasError) {
+                                        
                                         return const Center(
                                           child: Text(
                                               "Error loading Recent Plays",
@@ -383,7 +389,12 @@ class _AppHomepageState extends State<AppHomepage> {
                                     },
                                   ),
                                 ],
-                              ))
+                              )),
+                              Positioned(
+                                bottom: 20,
+                                right: 0,
+                                left: 0,
+                                child: CurrentlyPlayingTile())
                         ],
                       ),
                     ),
@@ -475,126 +486,134 @@ class SpotifyReleaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(2.0),
-      decoration: BoxDecoration(
-        boxShadow: [
-          // Bottom shadow
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, 3), // Moves shadow **down**
-          ),
-          // Top shadow
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: Offset(0, -3), // Moves shadow **up**
-          ),
-        ],
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with artist image and "NEW RELEASE FROM" text
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: NetworkImage(RPI.track.album.images[0].url!),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+            context,
+            SlideUpRoute(
+                page: MusicPlayerScreen(track: RPI.track,playListName:RPI.track.album.name,)));
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(2.0),
+        decoration: BoxDecoration(
+          boxShadow: [
+            // Bottom shadow
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(0, 3), // Moves shadow **down**
+            ),
+            // Top shadow
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(0, -3), // Moves shadow **up**
+            ),
+          ],
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with artist image and "NEW RELEASE FROM" text
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: NetworkImage(RPI.track.album.images[0].url!),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      RPI.track.artists[0].name,
+                      style: GoogleFonts.abel(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+      
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(4.0),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    RPI.track.artists[0].name,
-                    style: GoogleFonts.abel(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                  // Album art
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      bottomLeft: Radius.circular(4),
+                    ),
+                    child: Image.network(
+                      RPI.track.album.images[0].url!,
+                      width: 100,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            RPI.track.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${RPI.track.album.albumType} • (${RPI.track.album.name})',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.favorite_border),
+                                color: Colors.white,
+                                onPressed: onLike,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.play_circle_filled),
+                                color: Colors.white,
+                                iconSize: 40,
+                                onPressed: onPlay,
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(4.0),
             ),
-            child: Row(
-              children: [
-                // Album art
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(4),
-                    bottomLeft: Radius.circular(4),
-                  ),
-                  child: Image.network(
-                    RPI.track.album.images[0].url!,
-                    width: 100,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          RPI.track.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${RPI.track.album.albumType} • (${RPI.track.album.name})',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.favorite_border),
-                              color: Colors.white,
-                              onPressed: onLike,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.play_circle_filled),
-                              color: Colors.white,
-                              iconSize: 40,
-                              onPressed: onPlay,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
