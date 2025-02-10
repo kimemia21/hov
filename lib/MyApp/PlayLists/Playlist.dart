@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:spotifyplayer/Globals.dart';
+import 'package:spotifyplayer/MyApp/Music/MusicPlayer.dart';
 import 'package:spotifyplayer/creditials.dart';
 import 'package:spotifyplayer/models/Playlistmodel.dart';
 import 'package:spotifyplayer/models/RecentPlayed.dart';
@@ -281,6 +283,7 @@ class _PlaylistState extends State<Playlist> {
                                       itemCount: data.tracks.items.length,
                                       itemBuilder: (context, index) {
                                         return playListTile(
+                                          PlaylistName: playListName,
                                             track: data
                                                 .tracks.items[index].track!);
                                       }),
@@ -296,100 +299,112 @@ class _PlaylistState extends State<Playlist> {
 
 class playListTile extends StatelessWidget {
   final Track track;
+  final PlaylistName;
 
-  const playListTile({required this.track});
+  const playListTile({required this.track, required this.PlaylistName});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-      ),
-      child: Row(
-        children: [
-          // Album Art
-          Image.network(
-            track.album.images[0].url!,
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(width: 12),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+            context,
+            SlideUpRoute(
+                page: MusicPlayerScreen(
+              track: track,
+              playListName: PlaylistName,
+            )));
+      },
+      child: Container(
+        margin: EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.black87,
+        ),
+        child: Row(
+          children: [
+            // Album Art
+            Image.network(
+              track.album.images[0].url!,
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+            ),
+            const SizedBox(width: 12),
 
-          // Song Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  track.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+            // Song Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    track.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (false)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'LYRICS',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (false)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'LYRICS',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    Expanded(
-                      child: Text(
-                        track.artists[0].name,
-                        style: GoogleFonts.albertSans(
-                          color: Colors.white.withOpacity(0.7),
-                          fontSize: 14,
+                      Expanded(
+                        child: Text(
+                          track.artists[0].name,
+                          style: GoogleFonts.albertSans(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Right side icons
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.favorite,
+                  color: Colors.green,
+                  size: 24,
                 ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.more_vert,
+                  color: Colors.white.withOpacity(0.7),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
               ],
             ),
-          ),
-
-          // Right side icons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.favorite,
-                color: Colors.green,
-                size: 24,
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.more_vert,
-                color: Colors.white.withOpacity(0.7),
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
