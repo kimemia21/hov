@@ -87,7 +87,7 @@ class Track {
   });
 
   factory Track.fromJson(Map<String, dynamic> json) {
-    print("this is the track $json");
+
     return Track(
       album: Album.fromJson(json['album']),
       artists: (json['artists'] as List)
