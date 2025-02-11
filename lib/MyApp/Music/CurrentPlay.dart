@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:spotifyplayer/Globals.dart';
 import 'package:spotifyplayer/MyApp/Music/CurrentDevices.dart';
 import 'package:spotifyplayer/MyApp/Music/MusicPlayer.dart';
@@ -30,27 +31,31 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
   int timeStamp = 0;
   Color backGroundColor = Color(0xFF282828);
   String currentPlayImageUrl = "";
+void startRealTimeUpdates() {
+  // Fetch updated playback info every 3 seconds
+  _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _currentProgress =
+        DateTime.fromMillisecondsSinceEpoch(timeStamp).millisecondsSinceEpoch;
+    getPlaying();
+    getDevices();
+    // Don't restart startMusicProgress() here
+  });
 
-  void startRealTimeUpdates() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      getPlaying();
-      getDevices();
-    });
-
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (mounted && isPlaying) {
-        setState(() {
-          _currentProgress = DateTime.fromMillisecondsSinceEpoch(timeStamp)
-                  .millisecondsSinceEpoch +
-              500;
-        });
-      } else {
-        setState(() {
-          _currentProgress = _currentProgress;
-        });
-      }
-    });
+  // Start the music progress updates separately
+  if (_progressTimer == null || !_progressTimer!.isActive) {
+    startMusicProgress();
   }
+}
+
+void startMusicProgress() {
+  _progressTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+    if (mounted && isPlaying) {
+      setState(() {
+        _currentProgress += 500; // Simulate real-time progress
+      });
+    }
+  });
+}
 
   Future<void> getPlaying() async {
     try {
@@ -78,56 +83,77 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
   }
 
   Future<void> playerActions(playStates state) async {
+    print("called and the state is $state");
     // final String _state = playStatesToStrings(state: state);
-    switch (state) {
-      case playStates.play:
-        await spotifyRequests.PutRequests(
-          enpoint: "v1/me/player/play",
-        ).then((value) {
-          PremiumToast.show();
-        });
-        break;
-      case playStates.pause:
-        await spotifyRequests.PutRequests(
-          enpoint: "v1/me/player/pause",
-        );
-        break;
-      case playStates.next:
-        await spotifyRequests.PostRequests(enpoint: "v1/me/player/next");
-        break;
-      case playStates.previous:
-        await spotifyRequests.PostRequests(enpoint: "v1/me/player/previous");
-        break;
-      case playStates.stuffle:
-        await spotifyRequests.PutRequests(
-            enpoint: "v1/me/player/shuffle?state={true|false}");
-        break;
-      case playStates.repeat:
-        await spotifyRequests.PutRequests(
-            enpoint: "v1/me/player/repeat?state={track|context|off}");
-        break;
-    }
+
     try {
-      final value = await spotifyRequests.getRequests(enpoint: "v1/me/player");
-
-      if (value["success"]) {
-        final model = CurrentPlayModel.fromJson(value["rsp"]);
-
-        if (mounted) {
-          setState(() {
-            isPlaying = model.isPlaying;
-            isPlaying ? timeStamp = model.progressMs : timeStamp;
-            currentPlayImageUrl = model.item.album.images.first.url!;
+      switch (state) {
+        case playStates.play:
+          await spotifyRequests.PutRequests(
+            enpoint: "v1/me/player/play",
+          ).then((value) {
+            if (value["success"]) {
+              getPlaying();
+            }
           });
-          _playbackController.add(model);
-          _updateBackgroundColor();
-        }
-      } else {
-        _playbackController.add(null);
+          break;
+        case playStates.pause:
+          await spotifyRequests.PutRequests(
+            enpoint: "v1/me/player/pause",
+          ).then((value) {});
+          break;
+        case playStates.next:
+          await spotifyRequests.PostRequests(enpoint: "v1/me/player/next")
+              .then((value) {
+            print(value);
+            if (value["success"]) {
+              getPlaying();
+            } else {
+              Fluttertoast.showToast(
+                  msg: "This is a premium Feature",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
+            }
+            {}
+          });
+          break;
+        case playStates.previous:
+          await spotifyRequests.PostRequests(enpoint: "v1/me/player/previous")
+              .then((value) {
+            print(value);
+            if (value["success"]) {
+              getPlaying();
+            } else {
+              Fluttertoast.showToast(
+                  msg: "This is a premium Feature",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
+            }
+            {}
+          });
+          break;
+        case playStates.stuffle:
+          await spotifyRequests.PutRequests(
+                  enpoint: "v1/me/player/shuffle?state={true|false}")
+              .then((value) {});
+          break;
+        case playStates.repeat:
+          await spotifyRequests.PutRequests(
+                  enpoint: "v1/me/player/repeat?state={track|context|off}")
+              .then((value) {});
+          break;
       }
     } catch (e) {
       print("Current Play Error: $e");
-      _playbackController.add(null);
+      // _playbackController.add(null);
     }
   }
 
@@ -217,7 +243,17 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
                   page: MusicPlayerScreen(
                 track: currentTrack!.item,
                 playListName: currentTrack.item.album.name,
+                isPlaying: true,
+                currentProgress: _currentProgress,
               ))),
+          onHorizontalDragEnd: (DragEndDetails details) async {
+            print(details.primaryVelocity);
+            if (details.primaryVelocity! > 1000) {
+              await playerActions(playStates.next);
+            } else if (details.primaryVelocity! < -1000) {
+              await playerActions(playStates.previous);
+            }
+          },
           child: Container(
             decoration: BoxDecoration(
                 color: backGroundColor,
@@ -326,9 +362,6 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
                             ),
                             onPressed: () async {
                               playerActions(playStates.play);
-                              // Implement play/pause
-                              // After state change, force a refresh:
-                              // await getPlaying();
                             },
                           ),
                         ],

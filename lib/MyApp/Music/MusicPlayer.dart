@@ -1,12 +1,68 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:spotifyplayer/models/RecentPlayed.dart';
 
-class MusicPlayerScreen extends StatelessWidget {
+class MusicPlayerScreen extends StatefulWidget {
   final Track track;
   final String? playListName;
+  final bool isPlaying;
+  final int? currentProgress;
 
-  const MusicPlayerScreen({required this.track, this.playListName});
+  const MusicPlayerScreen(
+      {required this.track,
+      this.playListName,
+      required this.isPlaying,
+      this.currentProgress});
+
+  @override
+  State<MusicPlayerScreen> createState() => _MusicPlayerScreenState();
+}
+
+class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
+  Timer? _progressTimer;
+  int _currentProgress = 0;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isPlaying = widget.isPlaying;
+    if (_isPlaying) {
+      _currentProgress = widget.currentProgress!;
+    }
+    startProgressTimer();
+  }
+
+  void startProgressTimer() {
+    _progressTimer?.cancel();
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted && _isPlaying) {
+        setState(() {
+          _currentProgress += 500;
+
+          if (_currentProgress >= widget.track.durationMs) {
+            _currentProgress = widget.track.durationMs;
+          }
+        });
+      }
+    });
+  }
+
+  String formatTime(int milliseconds) {
+    if (milliseconds < 0) milliseconds = 0;
+    final seconds = (milliseconds / 1000).floor();
+    final minutes = (seconds / 60).floor();
+    final remainingSeconds = seconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,17 +71,13 @@ class MusicPlayerScreen extends StatelessWidget {
       body: SafeArea(
         child: GestureDetector(
           onVerticalDragUpdate: (details) {
-            print(details);
             if (details.primaryDelta! > 10) {
-              // Detects a downward swipe
               Navigator.of(context).pop();
             }
           },
           child: Column(
             children: [
-              SizedBox(
-                height: 30,
-              ),
+              SizedBox(height: 30),
               // Top bar
               Padding(
                 padding:
@@ -34,12 +86,10 @@ class MusicPlayerScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(
-                          color: Colors.white,
-                          Icons.keyboard_arrow_down,
-                          size: 30,
-                        )),
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.keyboard_arrow_down,
+                          color: Colors.white, size: 30),
+                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -51,7 +101,7 @@ class MusicPlayerScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          playListName!,
+                          widget.playListName!,
                           style: GoogleFonts.poppins(
                             color: Colors.white70,
                             fontSize: 10,
@@ -59,7 +109,7 @@ class MusicPlayerScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Icon(Icons.more_vert, color: Colors.white70),
+                    Icon(Icons.more_vert, color: Colors.white70),
                   ],
                 ),
               ),
@@ -71,11 +121,11 @@ class MusicPlayerScreen extends StatelessWidget {
                   aspectRatio: 1,
                   child: Container(
                     decoration: BoxDecoration(
-                      image: DecorationImage(image: NetworkImage(track.album.images[0].url!)),
-                      color: Colors.deepOrange,
-
+                      image: DecorationImage(
+                        image: NetworkImage(widget.track.album.images[0].url!),
+                      ),
                     ),
-                    child:  Center(
+                    child: Center(
                       child: Text(
                         'kimem',
                         style: GoogleFonts.poppins(
@@ -95,14 +145,13 @@ class MusicPlayerScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Song info
-                     Row(
+                    Row(
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              track.name,
+                              widget.track.name,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -110,11 +159,9 @@ class MusicPlayerScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                             track.artists[0].name,
+                              widget.track.artists[0].name,
                               style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
+                                  color: Colors.white70, fontSize: 14),
                             ),
                           ],
                         ),
@@ -122,55 +169,68 @@ class MusicPlayerScreen extends StatelessWidget {
                         Icon(Icons.favorite, color: Colors.green),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // Progress bar
                     Column(
                       children: [
                         LinearProgressIndicator(
-                          value: 0.3,
+                          value: widget.track.durationMs > 0
+                              ? _currentProgress / widget.track.durationMs
+                              : 0.0,
                           backgroundColor: Colors.white24,
                           valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.white),
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
-                        const SizedBox(height: 8),
-                        const Row(
+                        SizedBox(height: 8),
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('0:30',
+                            Text(formatTime(_currentProgress),
                                 style: TextStyle(color: Colors.white70)),
-                            Text('3:05',
+                            Text(formatTime(widget.track.durationMs),
                                 style: TextStyle(color: Colors.white70)),
                           ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // Playback controls
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        const Icon(Icons.shuffle, color: Colors.white70),
-                        const Icon(Icons.skip_previous,
+                        Icon(Icons.shuffle, color: Colors.white70),
+                        Icon(Icons.skip_previous,
                             color: Colors.white, size: 36),
-                        Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Icon(Icons.pause,
-                                color: Colors.black, size: 36),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isPlaying = !_isPlaying;
+                              if (_isPlaying) {
+                                startProgressTimer();
+                              }
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(
+                                _isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.black,
+                                size: 36,
+                              ),
+                            ),
                           ),
                         ),
-                        const Icon(Icons.skip_next,
-                            color: Colors.white, size: 36),
-                        const Icon(Icons.repeat, color: Colors.white70),
+                        Icon(Icons.skip_next, color: Colors.white, size: 36),
+                        Icon(Icons.repeat, color: Colors.white70),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    // Bottom controls
-                    const Row(
+                    SizedBox(height: 16),
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Icon(Icons.devices, color: Colors.white70),

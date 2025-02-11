@@ -491,7 +491,7 @@ class SpotifyReleaseCard extends StatelessWidget {
         Navigator.push(
             context,
             SlideUpRoute(
-                page: MusicPlayerScreen(track: RPI.track,playListName:RPI.track.album.name,)));
+                page: MusicPlayerScreen(track: RPI.track,playListName:RPI.track.album.name,isPlaying: false,)));
       },
       child: Container(
         width: double.infinity,

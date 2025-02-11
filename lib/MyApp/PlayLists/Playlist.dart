@@ -311,6 +311,7 @@ class playListTile extends StatelessWidget {
             context,
             SlideUpRoute(
                 page: MusicPlayerScreen(
+                  isPlaying: false,
               track: track,
               playListName: PlaylistName,
             )));

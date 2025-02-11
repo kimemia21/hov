@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class PremiumToast {
-  static void show() {
+  static void show(ToastGravity gravity) {
     Fluttertoast.showToast(
       msg: "⭐️ This feature is available for Premium subscribers only",
       toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
+      gravity: gravity,
       backgroundColor: Colors.black.withOpacity(0.9),
       textColor: Colors.white,
       fontSize: 16.0,
