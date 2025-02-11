@@ -1,8 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+ enum playStates {pause,play,next,previous,stuffle,repeat}
+
+ String playStatesToStrings({required playStates state}){
+  switch(state){
+    case playStates.pause:
+      return "pause";
+    case playStates.play:
+      return "play";
+    case playStates.next:
+      return "next";
+    case playStates.previous:
+      return "previous";
+    case playStates.stuffle:
+      return "stuffle"; 
+      case playStates.repeat:
+      return "repeat";   
+  }
+
+ }
+
+ 
+
+
+
+Future<void> openSpotify({required String url}) async {
+  print("Opening URL: $url");
+
+  final Uri uri = Uri.parse(url);
+
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else {
+    print("Could not open Spotify.");
+  }
+}
 
 class SmoothPageRoute extends PageRouteBuilder {
-   final Widget page;
-  
+  final Widget page;
+
   SmoothPageRoute({required this.page})
       : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -12,18 +49,14 @@ class SmoothPageRoute extends PageRouteBuilder {
             var end = Offset.zero;
             var tween = Tween(begin: begin, end: end);
             var offsetAnimation = animation.drive(tween);
-            
+
             // Fade animation
-            var fadeAnimation = animation.drive(
-              Tween(begin: 0.0, end: 1.0)
-                .chain(CurveTween(curve: Curves.easeOutCubic))
-            );
-            
+            var fadeAnimation = animation.drive(Tween(begin: 0.0, end: 1.0)
+                .chain(CurveTween(curve: Curves.easeOutCubic)));
+
             // Scale animation
-            var scaleAnimation = animation.drive(
-              Tween(begin: 0.95, end: 1.0)
-                .chain(CurveTween(curve: Curves.easeOutCubic))
-            );
+            var scaleAnimation = animation.drive(Tween(begin: 0.95, end: 1.0)
+                .chain(CurveTween(curve: Curves.easeOutCubic)));
 
             return FadeTransition(
               opacity: fadeAnimation,
@@ -44,7 +77,7 @@ class SmoothPageRoute extends PageRouteBuilder {
 // Optional: Additional transition variations
 class FadeScaleRoute extends PageRouteBuilder {
   final Widget page;
-  
+
   FadeScaleRoute({required this.page})
       : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -53,7 +86,7 @@ class FadeScaleRoute extends PageRouteBuilder {
               parent: animation,
               curve: Curves.easeInOut,
             );
-            
+
             return FadeTransition(
               opacity: fadeAnimation,
               child: ScaleTransition(
@@ -72,7 +105,7 @@ class FadeScaleRoute extends PageRouteBuilder {
 
 class SlideUpRoute extends PageRouteBuilder {
   final Widget page;
-  
+
   SlideUpRoute({required this.page})
       : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -80,10 +113,10 @@ class SlideUpRoute extends PageRouteBuilder {
             var begin = Offset(0.0, 1.0);
             var end = Offset.zero;
             var curve = Curves.easeInOutCubic;
-            
-            var tween = Tween(begin: begin, end: end)
-                .chain(CurveTween(curve: curve));
-            
+
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -93,7 +126,6 @@ class SlideUpRoute extends PageRouteBuilder {
           reverseTransitionDuration: Duration(milliseconds: 500),
         );
 }
-
 
 String getGreeting() {
   final hour = DateTime.now().hour;
@@ -119,5 +151,3 @@ String getGreeting() {
     return "How was your day";
   }
 }
-
-

@@ -33,6 +33,24 @@ user-top-read user-read-recently-played user-library-modify user-library-read
 user-read-email user-read-private
 ''';
 
+
+Map<String, dynamic> _handleErrorResponse(Response response) {
+  print("Error ${response.statusCode}: ${response.data}");
+
+  switch (response.statusCode) {
+    case 403:
+      return {"success": false, "rsp": "Access Forbidden: ${response.data}"};
+    case 401:
+      return {"success": false, "rsp": "Unauthorized: Please check your token."};
+    case 400:
+      return {"success": false, "rsp": "Bad Request: ${response.data}"};
+    case 500:
+      return {"success": false, "rsp": "Server Error: ${response.data}"};
+    default:
+      return {"success": false, "rsp": "Error ${response.statusCode}: ${response.data}"};
+  }
+}
+
   Future<Map<String, dynamic>> loginWithSpotify() async {
     try {
       print('DEBUG: Starting Spotify authentication flow');
@@ -124,7 +142,7 @@ user-read-email user-read-private
 
     final data = json.decode(response.body);
     final access_Code = data['access_token'];
-    if (response.statusCode == 200 && access_Code != null){
+    if (response.statusCode == 200 && access_Code != null) {
       accessCode = data['access_token'];
 
       // print("###################3success");
@@ -142,6 +160,51 @@ user-read-email user-read-private
           return {"success": true, "rsp": response.data};
         } else {
           var errorData = json.decode(response.data);
+
+          return {"success": false, "rsp": "$errorData"};
+        }
+      } else {
+        throw Exception('acessCode is missing');
+      }
+    } on DioException catch (e) {
+      throw Exception('error on this enpoint $enpoint ,error is $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> PutRequests({required String enpoint}) async {
+    try {
+    print("Access Code: $accessCode");
+
+    if (accessCode == null) {
+      throw Exception('Access code is missing');
+    }
+
+    final String url = "$baseUrl/$enpoint";
+    print("Hitting $url");
+
+    final response = await dio.put(url);
+
+    // Handling responses dynamically
+    if (response.statusCode == 204) {
+      return {"success": true, "rsp": response.data ?? "Success"};
+    } else {
+      // Handle different status codes dynamically
+      return _handleErrorResponse(response);
+    }
+  } on DioException catch (e) {
+    return {"success": false, "rsp": "Request failed: ${e.message}"};
+  }
+}
+  Future<Map<String, dynamic>> PostRequests({required String enpoint}) async {
+    try {
+      print(accessCode);
+      if (accessCode != null) {
+        print("hiting $baseUrl/$enpoint");
+        final response = await dio.post("$baseUrl/$enpoint");
+        if (response.statusCode == 200) {
+          return {"success": true, "rsp": response.data};
+        } else {
+          var errorData = response.data;
 
           return {"success": false, "rsp": "$errorData"};
         }

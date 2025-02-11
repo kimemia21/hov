@@ -8,6 +8,7 @@ import 'package:spotifyplayer/models/CurrentModel.dart';
 import 'dart:async';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:spotifyplayer/models/Device.dart';
+import 'package:spotifyplayer/notifications/PremiumToast.dart';
 
 class CurrentlyPlayingTile extends StatefulWidget {
   const CurrentlyPlayingTile({super.key});
@@ -52,6 +53,60 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
   }
 
   Future<void> getPlaying() async {
+    try {
+      final value = await spotifyRequests.getRequests(enpoint: "v1/me/player");
+
+      if (value["success"]) {
+        final model = CurrentPlayModel.fromJson(value["rsp"]);
+
+        if (mounted) {
+          setState(() {
+            isPlaying = model.isPlaying;
+            isPlaying ? timeStamp = model.progressMs : timeStamp;
+            currentPlayImageUrl = model.item.album.images.first.url!;
+          });
+          _playbackController.add(model);
+          _updateBackgroundColor();
+        }
+      } else {
+        _playbackController.add(null);
+      }
+    } catch (e) {
+      print("Current Play Error: $e");
+      _playbackController.add(null);
+    }
+  }
+
+  Future<void> playerActions(playStates state) async {
+    // final String _state = playStatesToStrings(state: state);
+    switch (state) {
+      case playStates.play:
+        await spotifyRequests.PutRequests(
+          enpoint: "v1/me/player/play",
+        ).then((value) {
+          PremiumToast.show();
+        });
+        break;
+      case playStates.pause:
+        await spotifyRequests.PutRequests(
+          enpoint: "v1/me/player/pause",
+        );
+        break;
+      case playStates.next:
+        await spotifyRequests.PostRequests(enpoint: "v1/me/player/next");
+        break;
+      case playStates.previous:
+        await spotifyRequests.PostRequests(enpoint: "v1/me/player/previous");
+        break;
+      case playStates.stuffle:
+        await spotifyRequests.PutRequests(
+            enpoint: "v1/me/player/shuffle?state={true|false}");
+        break;
+      case playStates.repeat:
+        await spotifyRequests.PutRequests(
+            enpoint: "v1/me/player/repeat?state={track|context|off}");
+        break;
+    }
     try {
       final value = await spotifyRequests.getRequests(enpoint: "v1/me/player");
 
@@ -241,12 +296,16 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
                                   context: context,
                                   builder: (context) {
                                     return Container(
-                                      height: 400,
-                                      width: MediaQuery.of(context).size.width,
-                                      decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.9)),
-                                      child: SpotifyDevicesStream(devicesStream: _devicesController.stream,)
-                                    );
+                                        height: 400,
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        decoration: BoxDecoration(
+                                            color:
+                                                Colors.black.withOpacity(0.9)),
+                                        child: SpotifyDevicesStream(
+                                          devicesStream:
+                                              _devicesController.stream,
+                                        ));
                                   });
                               // Implement device selection
                             },
@@ -266,9 +325,10 @@ class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
                               color: Colors.white,
                             ),
                             onPressed: () async {
+                              playerActions(playStates.play);
                               // Implement play/pause
                               // After state change, force a refresh:
-                              await getPlaying();
+                              // await getPlaying();
                             },
                           ),
                         ],
