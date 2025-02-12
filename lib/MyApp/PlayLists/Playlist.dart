@@ -32,7 +32,7 @@ class _PlaylistState extends State<Playlist> {
     playlist.then((value) {
       setState(() {
         playListName = value.name;
-        playListArtImage = value.images[0].url!;
+        playListArtImage = value.images.first.url!;
       });
       _updateBackgroundColor();
     });
@@ -167,6 +167,7 @@ class _PlaylistState extends State<Playlist> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Container(
         padding: EdgeInsets.all(2),
         decoration: BoxDecoration(
@@ -182,8 +183,9 @@ class _PlaylistState extends State<Playlist> {
               Colors.black87,
               Colors.black
             ])),
-        child: isLoading
-            ? LoadingAnimationWidget.staggeredDotsWave(
+        child: isLoading&&playlist==null&&playListArtImage==null
+            ? 
+            LoadingAnimationWidget.staggeredDotsWave(
                 color: Colors.green, size: 40)
             : FutureBuilder<PlaylistModel>(
                 future: playlist,

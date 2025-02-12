@@ -41,13 +41,12 @@ class _AppHomepageState extends State<AppHomepage> {
     playLists = getRecentPlayLists();
     // recentPlays = getRecentPlayed();
     topArtists = getTopArtists();
-    getRecentPlayed(); // Initial load
-    startRealTimeUpdates(); // Start polling
+    getRecentPlayed();
+    startRealTimeUpdates();
   }
 
   void startRealTimeUpdates() {
     _pollingTimer = Timer.periodic(Duration(seconds: 60), (timer) {
-    
       getRecentPlayed();
     });
   }
@@ -60,7 +59,7 @@ class _AppHomepageState extends State<AppHomepage> {
       await spotifyRequests.getRequests(enpoint: "v1/me").then((value) {
         if (value["success"]) {
           Map<String, dynamic> data = value["rsp"];
-          
+
           spotifyUser.initialize(data);
 
           setState(() {
@@ -140,11 +139,10 @@ class _AppHomepageState extends State<AppHomepage> {
         throw Exception("getRecentPlayLists ${value["rsp"]}");
       }
     } catch (e) {
-
       setState(() {
         isLoading = false;
       });
-       recentPlaysController.addError(e); // Add this
+      recentPlaysController.addError(e); // Add this
       print("recent playlist error $e");
       throw Exception("getRecentPlayLists error $e");
     }
@@ -344,38 +342,55 @@ class _AppHomepageState extends State<AppHomepage> {
                                   SizedBox(
                                     height: 10,
                                   ),
-                                  Text(
-                                    "Recently Played",
-                                    style: GoogleFonts.albertSans(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 25,
-                                  ),
                                   StreamBuilder<List<RecentlyPlayedItem>>(
                                     stream: recentPlaysController.stream,
                                     builder: (context, snapshot) {
-                                      if (snapshot.hasData &&
+                                                                    
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return Center(
+                                            child: LoadingAnimationWidget
+                                                .bouncingBall(
+                                                    color: Colors.green,
+                                                    size: 20));
+                                      } else if (snapshot.hasData &&
                                           snapshot.data!.isNotEmpty) {
                                         final data = snapshot.data;
-                                        return RecentPlayed(
-                                            RPI: data!.first,
-                                            onPlay: () {},
-                                            onLike: () {});
+                                        return Column(
+                                          children: [
+                                                   Text(
+                                          "Recently Played",
+                                          style: GoogleFonts.albertSans(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: 25,
+                                        ),
+                                            RecentPlayed(
+                                                RPI: data!.first,
+                                                onPlay: () {},
+                                                onLike: () {}),
+                                          ],
+                                        );
                                       } else if (snapshot.hasError) {
-                                        return const Center(
+                                        return Center(
                                           child: Text(
-                                              "Error loading Recent Plays",
+                                              "Error loading Recent Plays ${snapshot.error}",
                                               style: TextStyle(
                                                   color: Colors.white)),
                                         );
                                       } else {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
+                                        //  this is when the snaption is empty
+                                        return SizedBox(
+                                          height: 1,
                                         );
+                                                                    
+                                        // const Center(
+                                        //   child: CircularProgressIndicator(),
+                                        // );
                                       }
                                     },
                                   ),
