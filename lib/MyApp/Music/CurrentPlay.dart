@@ -21,8 +21,7 @@ class CurrentlyPlayingTile extends StatefulWidget {
 class _CurrentlyPlayingTileState extends State<CurrentlyPlayingTile> {
   StreamController<CurrentPlayModel?> _playbackController =
       StreamController.broadcast();
-  StreamController<List<Device>> _devicesController =
-      StreamController.broadcast();
+  StreamController<List<Device>> _devicesController = StreamController.broadcast();
 
   Timer? _pollingTimer;
   Timer? _progressTimer;

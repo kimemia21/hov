@@ -41,6 +41,8 @@ class RecentlyPlayedItem {
   });
 
   factory RecentlyPlayedItem.fromJson(Map<String, dynamic> json) {
+    print("this is the recent plays $json");
+    print("this is the recent plays ${json['track']}");
     return RecentlyPlayedItem(
       track: Track.fromJson(json['track']),
       playedAt: json['played_at'],

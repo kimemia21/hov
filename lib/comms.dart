@@ -164,9 +164,10 @@ user-read-email user-read-private
         print("hiting $baseUrl/$enpoint");
         final response = await dio.get("$baseUrl/$enpoint");
         if (response.statusCode == 200) {
+
           return {"success": true, "rsp": response.data};
         } else {
-          var errorData = json.decode(response.data);
+          var errorData = response.data;
 
           return {"success": false, "rsp": "$errorData"};
         }
@@ -221,7 +222,6 @@ user-read-email user-read-private
       if (response.statusCode == 204) {
         return {"success": true, "rsp": response.data ?? "Success"};
       } else {
-         
         // Handle different status codes dynamically
         return _handleErrorResponse(response);
       }

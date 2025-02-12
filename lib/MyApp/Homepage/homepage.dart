@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -25,7 +26,11 @@ class _AppHomepageState extends State<AppHomepage> {
   bool isLoading = false;
   late Future<List<SpotifyPlaylist>> playLists;
 
-  late Future<List<RecentlyPlayedItem>> recentPlays;
+  StreamController<List<RecentlyPlayedItem>> recentPlaysController =
+      StreamController.broadcast();
+  Timer? _pollingTimer;
+
+  // late Future<List<RecentlyPlayedItem>> recentPlays;
   late Future<List<TopArtists>> topArtists;
   @override
   void initState() {
@@ -34,8 +39,17 @@ class _AppHomepageState extends State<AppHomepage> {
     // getRecentPlays();
     // getRecentPlayLists();
     playLists = getRecentPlayLists();
-    recentPlays = getRecentPlayed();
+    // recentPlays = getRecentPlayed();
     topArtists = getTopArtists();
+    getRecentPlayed(); // Initial load
+    startRealTimeUpdates(); // Start polling
+  }
+
+  void startRealTimeUpdates() {
+    _pollingTimer = Timer.periodic(Duration(seconds: 60), (timer) {
+    
+      getRecentPlayed();
+    });
   }
 
   Future<void> getProfile() async {
@@ -46,6 +60,7 @@ class _AppHomepageState extends State<AppHomepage> {
       await spotifyRequests.getRequests(enpoint: "v1/me").then((value) {
         if (value["success"]) {
           Map<String, dynamic> data = value["rsp"];
+          
           spotifyUser.initialize(data);
 
           setState(() {
@@ -64,10 +79,10 @@ class _AppHomepageState extends State<AppHomepage> {
     }
   }
 
-  Future<List<RecentlyPlayedItem>> getRecentPlayed() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> getRecentPlayed() async {
+    // setState(() {
+    //   isLoading = true;
+    // });
 
     try {
       final value = await spotifyRequests.getRequests(
@@ -82,7 +97,11 @@ class _AppHomepageState extends State<AppHomepage> {
 
         final RecentlyPlayedResponse rsP =
             RecentlyPlayedResponse.fromJson(json);
-        return rsP.items;
+        if (mounted) {
+          recentPlaysController.add(rsP.items);
+        }
+
+        // return rsP.items;
       } else {
         throw Exception("getRecentPlayLists ${value["rsp"]}");
       }
@@ -97,9 +116,9 @@ class _AppHomepageState extends State<AppHomepage> {
   }
 
   Future<List<SpotifyPlaylist>> getRecentPlayLists() async {
-    setState(() {
-      isLoading = true;
-    });
+    // setState(() {
+    //   isLoading = true;
+    // });
 
     try {
       final value = await spotifyRequests.getRequests(
@@ -121,9 +140,11 @@ class _AppHomepageState extends State<AppHomepage> {
         throw Exception("getRecentPlayLists ${value["rsp"]}");
       }
     } catch (e) {
+
       setState(() {
         isLoading = false;
       });
+       recentPlaysController.addError(e); // Add this
       print("recent playlist error $e");
       throw Exception("getRecentPlayLists error $e");
     }
@@ -163,6 +184,13 @@ class _AppHomepageState extends State<AppHomepage> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    recentPlaysController.close();
+    _pollingTimer?.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.black,
@@ -184,7 +212,7 @@ class _AppHomepageState extends State<AppHomepage> {
                   },
                   child: Container(
                     child: SizedBox(
-                      // error with the scrolling some kids are not being displayed correctly 
+                      // error with the scrolling some kids are not being displayed correctly
                       // height: MediaQuery.of(context).size.height * 1,
                       // width: MediaQuery.of(context).size.width,
                       child: Stack(
@@ -196,7 +224,8 @@ class _AppHomepageState extends State<AppHomepage> {
                             child: SingleChildScrollView(
                               physics: BouncingScrollPhysics(),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     getGreeting(),
@@ -217,40 +246,46 @@ class _AppHomepageState extends State<AppHomepage> {
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
+                                            color:
+                                                Colors.white.withOpacity(0.05),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
                                           child: Icon(
                                             Icons.notifications,
                                             // size: 28,
-                                            color: Colors.white.withOpacity(0.7),
+                                            color:
+                                                Colors.white.withOpacity(0.7),
                                           ),
                                         ),
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
+                                            color:
+                                                Colors.white.withOpacity(0.05),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
                                           child: Icon(
                                             Icons.history,
                                             // size: 28,
-                                            color: Colors.white.withOpacity(0.7),
+                                            color:
+                                                Colors.white.withOpacity(0.7),
                                           ),
                                         ),
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
+                                            color:
+                                                Colors.white.withOpacity(0.05),
                                             borderRadius:
                                                 BorderRadius.circular(12),
                                           ),
                                           child: Icon(
                                             Icons.settings,
                                             // size: 28,
-                                            color: Colors.white.withOpacity(0.7),
+                                            color:
+                                                Colors.white.withOpacity(0.7),
                                           ),
                                         ),
                                       ],
@@ -320,17 +355,17 @@ class _AppHomepageState extends State<AppHomepage> {
                                   SizedBox(
                                     height: 25,
                                   ),
-                                  FutureBuilder<List<RecentlyPlayedItem>>(
-                                    future: recentPlays,
+                                  StreamBuilder<List<RecentlyPlayedItem>>(
+                                    stream: recentPlaysController.stream,
                                     builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
+                                      if (snapshot.hasData &&
+                                          snapshot.data!.isNotEmpty) {
                                         final data = snapshot.data;
-                                        return SpotifyReleaseCard(
-                                            RPI: data![0],
+                                        return RecentPlayed(
+                                            RPI: data!.first,
                                             onPlay: () {},
                                             onLike: () {});
                                       } else if (snapshot.hasError) {
-                                        
                                         return const Center(
                                           child: Text(
                                               "Error loading Recent Plays",
@@ -390,11 +425,11 @@ class _AppHomepageState extends State<AppHomepage> {
                                   ),
                                 ],
                               )),
-                              Positioned(
-                                bottom: 20,
-                                right: 0,
-                                left: 0,
-                                child: CurrentlyPlayingTile())
+                          Positioned(
+                              bottom: 20,
+                              right: 0,
+                              left: 0,
+                              child: CurrentlyPlayingTile())
                         ],
                       ),
                     ),
@@ -418,7 +453,6 @@ class _HomepagePlayListTileState extends State<HomepagePlayListTile> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-      
         Navigator.push(context,
             SlideUpRoute(page: Playlist(playlistId: widget.playlist.id)));
       },
@@ -472,12 +506,12 @@ class _HomepagePlayListTileState extends State<HomepagePlayListTile> {
   }
 }
 
-class SpotifyReleaseCard extends StatelessWidget {
+class RecentPlayed extends StatelessWidget {
   final RecentlyPlayedItem RPI;
   final VoidCallback onPlay;
   final VoidCallback onLike;
 
-  const SpotifyReleaseCard({
+  const RecentPlayed({
     Key? key,
     required this.RPI,
     required this.onPlay,
@@ -491,7 +525,11 @@ class SpotifyReleaseCard extends StatelessWidget {
         Navigator.push(
             context,
             SlideUpRoute(
-                page: MusicPlayerScreen(track: RPI.track,playListName:RPI.track.album.name,isPlaying: false,)));
+                page: MusicPlayerScreen(
+              track: RPI.track,
+              playListName: RPI.track.album.name,
+              isPlaying: false,
+            )));
       },
       child: Container(
         width: double.infinity,
@@ -543,7 +581,7 @@ class SpotifyReleaseCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-      
+
             Container(
               height: 120,
               decoration: BoxDecoration(
